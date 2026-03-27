@@ -1,9 +1,13 @@
 ## AI Compiler Pipeline
 
-A toy AI compiler implementing the full model → IR → optimization → codegen stack,
+A minimal AI compiler pipeline implementing an end-to-end model → IR → optimization → codegen pipeline,
 inspired by production compilers like MLIR and TVM.
 Built as a ground-up exploration of how AI workloads are lowered and optimized for hardware execution.
+This project demonstrates how high-level AI computations can be systematically transformed into
+optimized execution plans, mirroring core ideas used in modern ML compilers.
+
 JSON Model → Parser → HLGraph → Lowering → LLGraph → PassManager → Schedule → Codegen → Executor
+
 
 #### Quick Start
 
@@ -40,8 +44,8 @@ declare result values.
 
 Translates each symbolic HLO expression ("a * b", "relu(x)") into a typed
 LLOp with explicit inputs. Names are preserved through lowering so downstream
-ops can reference them by name, equivalent to SSA value naming in LLVM IR.
-Unsupported expressions raise rather than silently drop ops.
+ops can reference them by name, similar to SSA-style naming (values referenced
+by name across ops). Unsupported expressions raise rather than silently drop ops.
 
 ##### 3 — Optimization Passes (PassManager)
 
@@ -77,8 +81,8 @@ when no explicit outputs are declared.
 Collapses MUL → ADD → RELU sequences into a single FUSED op, reducing
 kernel launch overhead and enabling register-level data reuse. Rewrites downstream
 input references using a name remap table so fused output names propagate
-correctly through the rest of the graph. This is the same SSA value-replacement
-pattern used in LLVM's InstCombine.
+correctly through the rest of the graph. This is similar to value-replacement patterns
+used in compiler optimization passes (e.g., LLVM InstCombine).
 
 > mul0: MUL(a, b)       \
 > add0: ADD(mul0, c)    |  →  fused_mul0: FUSED(a, b, c)
@@ -110,15 +114,15 @@ hardware resources, tile sizes, and memory hierarchy to determine parallelism.
 ##### 5 — Code Generation
 
 Produces a flat execution plan. An ordered list of steps with resolved input
-names, op types, and strategies. Designed to be straightforward to lower further
-to LLVM IR, CUDA kernels, or hardware-specific instruction streams.
+names, op types, and strategies. Structured in a way that could be extended
+toward lowering into LLVM IR, CUDA kernels, or hardware-specific backends.
 
 ##### 6 — Executor
 
 A reference interpreter that evaluates the execution plan against concrete inputs.
 Supports ADD, MUL, RELU, FUSED, and CONST op types. Used in tests to
-verify that the optimized and unoptimized paths produce identical outputs, the
-strongest correctness guarantee a compiler can provide.
+verify that the optimized and unoptimized paths produce identical outputs, a strong
+practical correctness guarantee used in compiler testing.
 
 #### Example Output
 
@@ -191,6 +195,12 @@ outputs, DCE can only infer roots by topology and a dead chain that produces
 a terminal value looks identical to a live output. The outputs field in the
 model format solves this cleanly, and threads through HLGraph → LLGraph so
 it's available to passes after lowering.
+
+#### Limitations
+
+This project models a simplified compiler pipeline and does not implement full SSA form,
+type systems, or hardware-specific code generation. It is intended as an educational
+exploration of compiler design concepts rather than a production compiler.
 
 ##### What's Next
 
