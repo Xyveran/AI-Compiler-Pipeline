@@ -1,0 +1,11 @@
+{
+    "outputs": ["relu1"],
+    "ops": [
+        {"name": "mul0",  "expr": "a * b"},
+        {"name": "add0",  "expr": "mul0 + c"},
+        {"name": "relu0", "expr": "relu(add0)"},
+        {"name": "mul1",  "expr": "relu0 * b"},
+        {"name": "add1",  "expr": "mul1 + 4"},
+        {"name": "relu1", "expr": "relu(add1)"}
+    ]
+}
